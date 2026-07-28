@@ -319,27 +319,27 @@
 
 <script>
 const LANGS = [
-  {code:'auto', name:'Otomatik Algıla', speech:null},
-  {code:'tr', name:'Türkçe', speech:'tr-TR'},
-  {code:'en', name:'İngilizce', speech:'en-US'},
-  {code:'de', name:'Almanca', speech:'de-DE'},
-  {code:'fr', name:'Fransızca', speech:'fr-FR'},
-  {code:'es', name:'İspanyolca', speech:'es-ES'},
-  {code:'it', name:'İtalyanca', speech:'it-IT'},
-  {code:'ru', name:'Rusça', speech:'ru-RU'},
-  {code:'ar', name:'Arapça', speech:'ar-SA'},
-  {code:'zh', name:'Çince (Basit)', speech:'zh-CN'},
-  {code:'ja', name:'Japonca', speech:'ja-JP'},
-  {code:'ko', name:'Korece', speech:'ko-KR'},
-  {code:'pt', name:'Portekizce', speech:'pt-PT'},
-  {code:'nl', name:'Felemenkçe', speech:'nl-NL'},
-  {code:'el', name:'Yunanca', speech:'el-GR'},
-  {code:'pl', name:'Lehçe', speech:'pl-PL'},
-  {code:'uk', name:'Ukraynaca', speech:'uk-UA'},
-  {code:'fa', name:'Farsça', speech:'fa-IR'},
-  {code:'hi', name:'Hintçe', speech:'hi-IN'},
-  {code:'vi', name:'Vietnamca', speech:'vi-VN'},
-  {code:'th', name:'Tayca', speech:'th-TH'},
+  {code:'auto', gcode:'auto', name:'Otomatik Algıla', speech:null},
+  {code:'tr', gcode:'tr', name:'Türkçe', speech:'tr-TR'},
+  {code:'en', gcode:'en', name:'İngilizce', speech:'en-US'},
+  {code:'de', gcode:'de', name:'Almanca', speech:'de-DE'},
+  {code:'fr', gcode:'fr', name:'Fransızca', speech:'fr-FR'},
+  {code:'es', gcode:'es', name:'İspanyolca', speech:'es-ES'},
+  {code:'it', gcode:'it', name:'İtalyanca', speech:'it-IT'},
+  {code:'ru', gcode:'ru', name:'Rusça', speech:'ru-RU'},
+  {code:'ar', gcode:'ar', name:'Arapça', speech:'ar-SA'},
+  {code:'zh', gcode:'zh-CN', name:'Çince (Basit)', speech:'zh-CN'},
+  {code:'ja', gcode:'ja', name:'Japonca', speech:'ja-JP'},
+  {code:'ko', gcode:'ko', name:'Korece', speech:'ko-KR'},
+  {code:'pt', gcode:'pt', name:'Portekizce', speech:'pt-PT'},
+  {code:'nl', gcode:'nl', name:'Felemenkçe', speech:'nl-NL'},
+  {code:'el', gcode:'el', name:'Yunanca', speech:'el-GR'},
+  {code:'pl', gcode:'pl', name:'Lehçe', speech:'pl-PL'},
+  {code:'uk', gcode:'uk', name:'Ukraynaca', speech:'uk-UA'},
+  {code:'fa', gcode:'fa', name:'Farsça', speech:'fa-IR'},
+  {code:'hi', gcode:'hi', name:'Hintçe', speech:'hi-IN'},
+  {code:'vi', gcode:'vi', name:'Vietnamca', speech:'vi-VN'},
+  {code:'th', gcode:'th', name:'Tayca', speech:'th-TH'},
 ];
 
 const srcSel = document.getElementById('srcLang');
@@ -413,22 +413,14 @@ async function translate(){
   speakBtn.disabled = true;
   copyBtn.disabled = true;
 
-  const systemPrompt = `Sen profesyonel bir çevirmensin. Verilen metni "${srcLang.name}" dilinden "${tgtLang.name}" diline çevir. Kaynak dil "Otomatik Algıla" ise metnin dilini kendin tespit et. SADECE çeviriyi döndür; açıklama, tırnak işareti, not veya başka hiçbir şey ekleme.`;
-
   try{
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: [{ role: "user", content: text }]
-      })
-    });
+    const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl='
+      + encodeURIComponent(srcLang.gcode) + '&tl=' + encodeURIComponent(tgtLang.gcode)
+      + '&dt=t&q=' + encodeURIComponent(text);
+    const res = await fetch(url);
     if(!res.ok) throw new Error('İstek başarısız: ' + res.status);
     const data = await res.json();
-    const translated = (data.content || []).map(b=>b.text||'').join('').trim();
+    const translated = (data[0] || []).map(seg => seg[0]).join('').trim();
     if(!translated) throw new Error('Boş yanıt');
 
     renderOutput(translated);
