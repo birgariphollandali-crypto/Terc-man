@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>AKTARIM — Sesli ve Yazılı Çeviri</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="theme-color" content="#12161c">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12161c;
+    --panel:#1c222b;
+    --panel-2:#232a34;
+    --line:#333c47;
+    --amber:#f0a93e;
+    --amber-dim:#8a6528;
+    --paper:#eae5da;
+    --paper-dim:#9aa1ab;
+    --green:#57b894;
+    --red:#e0715c;
+    --radius:14px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--paper);
+    font-family:'IBM Plex Sans', sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:0 0 40px;
+  }
+  .app{
+    width:100%;
+    max-width:480px;
+    min-height:100vh;
+    background:var(--bg);
+    padding:28px 18px 20px;
+    position:relative;
+  }
+  .app::before{
+    content:"";
+    position:absolute; top:0; left:0; right:0; height:3px;
+    background:repeating-linear-gradient(90deg, var(--amber) 0 10px, transparent 10px 20px);
+    opacity:.5;
+  }
+  header{ margin-bottom:22px; }
+  .logo{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:700;
+    font-size:28px;
+    letter-spacing:3px;
+    color:var(--paper);
+  }
+  .logo span{ color:var(--amber); }
+  .tagline{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--paper-dim);
+    margin-top:4px;
+  }
+
+  .board{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .lang-slot{ flex:1; min-width:0; }
+  .lang-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    letter-spacing:2px;
+    color:var(--amber-dim);
+    margin-bottom:6px;
+    display:block;
+  }
+  select{
+    width:100%;
+    background:var(--panel-2);
+    color:var(--paper);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:11px 10px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:14px;
+    font-weight:500;
+    appearance:none;
+    -webkit-appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%23f0a93e'/></svg>");
+    background-repeat:no-repeat;
+    background-position:right 12px center;
+  }
+  select:focus-visible, button:focus-visible, textarea:focus-visible{
+    outline:2px solid var(--amber);
+    outline-offset:2px;
+  }
+  .swap-btn{
+    flex-shrink:0;
+    width:38px; height:38px;
+    border-radius:50%;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--amber);
+    font-size:16px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    margin-top:14px;
+    transition:transform .25s ease;
+  }
+  .swap-btn:active{ transform:rotate(180deg); }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px;
+    margin-bottom:12px;
+  }
+  .panel-head{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:8px;
+  }
+  .panel-title{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    letter-spacing:2px;
+    color:var(--paper-dim);
+  }
+  .icon-btn{
+    background:none;
+    border:none;
+    color:var(--paper-dim);
+    width:34px; height:34px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    font-size:16px;
+  }
+  .icon-btn:active{ background:var(--panel-2); }
+  .icon-btn.active{ color:var(--red); }
+  .icon-btn[disabled]{ opacity:.3; cursor:not-allowed; }
+
+  textarea{
+    width:100%;
+    background:transparent;
+    border:none;
+    color:var(--paper);
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:16px;
+    line-height:1.5;
+    resize:none;
+    min-height:90px;
+    padding:0;
+  }
+  .counter{
+    text-align:right;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    color:var(--paper-dim);
+    margin-top:4px;
+  }
+
+  .translate-btn{
+    width:100%;
+    background:var(--amber);
+    color:#1a1406;
+    border:none;
+    border-radius:10px;
+    padding:14px;
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:2px;
+    cursor:pointer;
+    margin-bottom:12px;
+    transition:opacity .15s ease;
+  }
+  .translate-btn:active{ opacity:.8; }
+  .translate-btn[disabled]{ opacity:.5; cursor:wait; }
+
+  .output-text{
+    font-size:17px;
+    line-height:1.55;
+    min-height:60px;
+    color:var(--paper);
+  }
+  .output-text.placeholder{ color:var(--paper-dim); font-style:italic; font-size:15px; }
+  .output-text.error{ color:var(--red); font-size:14px; font-family:'IBM Plex Mono', monospace; }
+  .flap-line{
+    display:block;
+    opacity:0;
+    transform:translateY(6px);
+    animation:flap .35s ease forwards;
+  }
+  @keyframes flap{ to{ opacity:1; transform:translateY(0);} }
+  @media (prefers-reduced-motion: reduce){
+    .flap-line{ animation:none; opacity:1; transform:none; }
+    .swap-btn{ transition:none; }
+  }
+
+  .history-title{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    letter-spacing:2px;
+    color:var(--paper-dim);
+    margin:18px 0 8px 4px;
+  }
+  .history-item{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px 12px;
+    margin-bottom:8px;
+    cursor:pointer;
+  }
+  .history-item:active{ background:var(--panel-2); }
+  .history-src{
+    font-size:13px;
+    color:var(--paper-dim);
+    margin-bottom:3px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .history-tgt{
+    font-size:14px;
+    color:var(--paper);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .history-meta{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:9px;
+    color:var(--amber-dim);
+    letter-spacing:1px;
+    margin-top:4px;
+  }
+  .empty-hist{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--paper-dim);
+    padding:8px 4px;
+  }
+  .toast{
+    position:fixed;
+    bottom:24px; left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--panel-2);
+    border:1px solid var(--amber);
+    color:var(--paper);
+    padding:10px 18px;
+    border-radius:20px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    opacity:0;
+    pointer-events:none;
+    transition:all .25s ease;
+    z-index:10;
+    white-space:nowrap;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">AKTAR<span>IM</span></div>
+    <div class="tagline">Sesli · Yazılı Çeviri</div>
+  </header>
+
+  <div class="board">
+    <div class="lang-slot">
+      <label class="lang-label" for="srcLang">KALKIŞ</label>
+      <select id="srcLang"></select>
+    </div>
+    <button class="swap-btn" id="swapBtn" aria-label="Dilleri değiştir" title="Dilleri değiştir">⇄</button>
+    <div class="lang-slot">
+      <label class="lang-label" for="tgtLang">VARIŞ</label>
+      <select id="tgtLang"></select>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <span class="panel-title">METİN</span>
+      <button class="icon-btn" id="micBtn" aria-label="Sesle gir" title="Sesle gir">🎤</button>
+    </div>
+    <textarea id="inputText" maxlength="2000" placeholder="Çevirmek istediğin metni yaz…"></textarea>
+    <div class="counter"><span id="charCount">0</span>/2000</div>
+  </div>
+
+  <button class="translate-btn" id="translateBtn">ÇEVİR</button>
+
+  <div class="panel">
+    <div class="panel-head">
+      <span class="panel-title" id="outputLabel">VARIŞ</span>
+      <div>
+        <button class="icon-btn" id="speakBtn" aria-label="Sesli oku" title="Sesli oku" disabled>🔊</button>
+        <button class="icon-btn" id="copyBtn" aria-label="Kopyala" title="Kopyala" disabled>⧉</button>
+      </div>
+    </div>
+    <div class="output-text placeholder" id="outputText">Çevirini burada göreceksin.</div>
+  </div>
+
+  <div class="history-title">GEÇMİŞ</div>
+  <div id="historyList"><div class="empty-hist">Henüz çeviri yok.</div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const LANGS = [
+  {code:'auto', name:'Otomatik Algıla', speech:null},
+  {code:'tr', name:'Türkçe', speech:'tr-TR'},
+  {code:'en', name:'İngilizce', speech:'en-US'},
+  {code:'de', name:'Almanca', speech:'de-DE'},
+  {code:'fr', name:'Fransızca', speech:'fr-FR'},
+  {code:'es', name:'İspanyolca', speech:'es-ES'},
+  {code:'it', name:'İtalyanca', speech:'it-IT'},
+  {code:'ru', name:'Rusça', speech:'ru-RU'},
+  {code:'ar', name:'Arapça', speech:'ar-SA'},
+  {code:'zh', name:'Çince (Basit)', speech:'zh-CN'},
+  {code:'ja', name:'Japonca', speech:'ja-JP'},
+  {code:'ko', name:'Korece', speech:'ko-KR'},
+  {code:'pt', name:'Portekizce', speech:'pt-PT'},
+  {code:'nl', name:'Felemenkçe', speech:'nl-NL'},
+  {code:'el', name:'Yunanca', speech:'el-GR'},
+  {code:'pl', name:'Lehçe', speech:'pl-PL'},
+  {code:'uk', name:'Ukraynaca', speech:'uk-UA'},
+  {code:'fa', name:'Farsça', speech:'fa-IR'},
+  {code:'hi', name:'Hintçe', speech:'hi-IN'},
+  {code:'vi', name:'Vietnamca', speech:'vi-VN'},
+  {code:'th', name:'Tayca', speech:'th-TH'},
+];
+
+const srcSel = document.getElementById('srcLang');
+const tgtSel = document.getElementById('tgtLang');
+const inputText = document.getElementById('inputText');
+const charCount = document.getElementById('charCount');
+const translateBtn = document.getElementById('translateBtn');
+const outputText = document.getElementById('outputText');
+const outputLabel = document.getElementById('outputLabel');
+const speakBtn = document.getElementById('speakBtn');
+const copyBtn = document.getElementById('copyBtn');
+const micBtn = document.getElementById('micBtn');
+const swapBtn = document.getElementById('swapBtn');
+const historyList = document.getElementById('historyList');
+const toast = document.getElementById('toast');
+
+LANGS.forEach(l=>{
+  const o1 = document.createElement('option'); o1.value=l.code; o1.textContent=l.name;
+  srcSel.appendChild(o1);
+});
+LANGS.filter(l=>l.code!=='auto').forEach(l=>{
+  const o2 = document.createElement('option'); o2.value=l.code; o2.textContent=l.name;
+  tgtSel.appendChild(o2);
+});
+srcSel.value = 'auto';
+tgtSel.value = 'tr';
+
+let history = [];
+let lastTranslation = null;
+
+function langByCode(code){ return LANGS.find(l=>l.code===code); }
+
+function showToast(msg){
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'), 1800);
+}
+
+inputText.addEventListener('input', ()=>{
+  charCount.textContent = inputText.value.length;
+});
+
+swapBtn.addEventListener('click', ()=>{
+  if(srcSel.value === 'auto'){
+    showToast('Önce kaynak dili seç');
+    return;
+  }
+  const s = srcSel.value, t = tgtSel.value;
+  srcSel.value = t;
+  tgtSel.value = s;
+  const inVal = inputText.value;
+  if(lastTranslation && lastTranslation.text){
+    inputText.value = lastTranslation.text;
+    charCount.textContent = inputText.value.length;
+  }
+});
+
+async function translate(){
+  const text = inputText.value.trim();
+  if(!text){
+    showToast('Önce bir metin yaz');
+    return;
+  }
+  const srcLang = langByCode(srcSel.value);
+  const tgtLang = langByCode(tgtSel.value);
+
+  translateBtn.disabled = true;
+  translateBtn.textContent = 'ÇEVRİLİYOR…';
+  outputText.className = 'output-text placeholder';
+  outputText.textContent = '• • •';
+  speakBtn.disabled = true;
+  copyBtn.disabled = true;
+
+  const systemPrompt = `Sen profesyonel bir çevirmensin. Verilen metni "${srcLang.name}" dilinden "${tgtLang.name}" diline çevir. Kaynak dil "Otomatik Algıla" ise metnin dilini kendin tespit et. SADECE çeviriyi döndür; açıklama, tırnak işareti, not veya başka hiçbir şey ekleme.`;
+
+  try{
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{ role: "user", content: text }]
+      })
+    });
+    if(!res.ok) throw new Error('İstek başarısız: ' + res.status);
+    const data = await res.json();
+    const translated = (data.content || []).map(b=>b.text||'').join('').trim();
+    if(!translated) throw new Error('Boş yanıt');
+
+    renderOutput(translated);
+    lastTranslation = { text: translated, src: srcLang, tgt: tgtLang };
+    speakBtn.disabled = false;
+    copyBtn.disabled = false;
+
+    history.unshift({ srcText: text, tgtText: translated, srcName: srcLang.name, tgtName: tgtLang.name });
+    history = history.slice(0, 8);
+    renderHistory();
+  }catch(err){
+    outputText.className = 'output-text error';
+    outputText.textContent = 'Çeviri başarısız oldu. Bağlantını kontrol edip tekrar dene.';
+  }finally{
+    translateBtn.disabled = false;
+    translateBtn.textContent = 'ÇEVİR';
+  }
+}
+
+function renderOutput(text){
+  outputLabel.textContent = 'VARIŞ · ' + langByCode(tgtSel.value).name.toUpperCase();
+  outputText.className = 'output-text';
+  outputText.innerHTML = '';
+  const lines = text.split('\n').filter(l=>l.length>0);
+  lines.forEach((line, i)=>{
+    const span = document.createElement('span');
+    span.className = 'flap-line';
+    span.style.animationDelay = (i*45) + 'ms';
+    span.textContent = line;
+    outputText.appendChild(span);
+  });
+}
+
+function renderHistory(){
+  if(history.length===0){
+    historyList.innerHTML = '<div class="empty-hist">Henüz çeviri yok.</div>';
+    return;
+  }
+  historyList.innerHTML = '';
+  history.forEach(h=>{
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    item.innerHTML = `
+      <div class="history-src">${escapeHtml(h.srcText)}</div>
+      <div class="history-tgt">${escapeHtml(h.tgtText)}</div>
+      <div class="history-meta">${h.srcName.toUpperCase()} → ${h.tgtName.toUpperCase()}</div>
+    `;
+    item.addEventListener('click', ()=>{
+      inputText.value = h.srcText;
+      charCount.textContent = h.srcText.length;
+      renderOutput(h.tgtText);
+      lastTranslation = { text: h.tgtText, src: null, tgt: null };
+      speakBtn.disabled = false;
+      copyBtn.disabled = false;
+    });
+    historyList.appendChild(item);
+  });
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+translateBtn.addEventListener('click', translate);
+
+copyBtn.addEventListener('click', async ()=>{
+  if(!lastTranslation) return;
+  try{
+    await navigator.clipboard.writeText(lastTranslation.text);
+    showToast('Kopyalandı');
+  }catch(e){
+    showToast('Kopyalanamadı');
+  }
+});
+
+speakBtn.addEventListener('click', ()=>{
+  if(!lastTranslation) return;
+  if(!('speechSynthesis' in window)){
+    showToast('Cihaz sesli okumayı desteklemiyor');
+    return;
+  }
+  const utter = new SpeechSynthesisUtterance(lastTranslation.text);
+  const tgtLang = langByCode(tgtSel.value);
+  if(tgtLang && tgtLang.speech) utter.lang = tgtLang.speech;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utter);
+});
+
+// Speech-to-text
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
+let listening = false;
+
+if(SpeechRecognition){
+  recognition = new SpeechRecognition();
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.addEventListener('result', (e)=>{
+    const transcript = e.results[0][0].transcript;
+    inputText.value = (inputText.value ? inputText.value + ' ' : '') + transcript;
+    charCount.textContent = inputText.value.length;
+  });
+  recognition.addEventListener('end', ()=>{
+    listening = false;
+    micBtn.classList.remove('active');
+  });
+  recognition.addEventListener('error', ()=>{
+    listening = false;
+    micBtn.classList.remove('active');
+    showToast('Ses algılanamadı');
+  });
+
+  micBtn.addEventListener('click', ()=>{
+    const srcLang = langByCode(srcSel.value);
+    recognition.lang = (srcLang && srcLang.speech) ? srcLang.speech : (navigator.language || 'tr-TR');
+    if(listening){
+      recognition.stop();
+      return;
+    }
+    try{
+      recognition.start();
+      listening = true;
+      micBtn.classList.add('active');
+    }catch(e){
+      showToast('Mikrofon başlatılamadı');
+    }
+  });
+}else{
+  micBtn.disabled = true;
+  micBtn.title = 'Bu tarayıcı sesle girişi desteklemiyor';
+}
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
